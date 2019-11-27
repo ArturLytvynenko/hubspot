@@ -45,7 +45,9 @@ public enum PullFrequency {
   }
 
   public static PullFrequency fromValue(String name) {
-    return Arrays.stream(PullFrequency.values()).filter(pullFrequency -> pullFrequency.getName().equals(name))
-      .findAny().orElseThrow(() -> new RuntimeException(String.format("Unexpected pull frequency value '%s'.", name)));
+    return Arrays.stream(PullFrequency.values())
+      .filter(pullFrequency -> pullFrequency.getName().equals(name))
+      .findAny()
+      .orElseThrow(() -> new RuntimeException(String.format("Unexpected pull frequency value '%s'.", name)));
   }
 }

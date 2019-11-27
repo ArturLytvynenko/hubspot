@@ -47,6 +47,8 @@ public class HubspotStreamingSource extends StreamingSource<StructuredRecord> {
   public void configurePipeline(PipelineConfigurer pipelineConfigurer) {
     FailureCollector collector = pipelineConfigurer.getStageConfigurer().getFailureCollector();
     config.validate(collector); // validate when macros are not substituted
+    collector.getOrThrowException();
+
     pipelineConfigurer.getStageConfigurer().setOutputSchema(config.getSchema());
   }
 
