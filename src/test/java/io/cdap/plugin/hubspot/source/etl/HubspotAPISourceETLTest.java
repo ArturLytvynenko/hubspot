@@ -18,27 +18,8 @@ package io.cdap.plugin.hubspot.source.etl;
 import com.google.common.collect.ImmutableMap;
 import io.cdap.cdap.api.artifact.ArtifactSummary;
 import io.cdap.cdap.api.data.format.StructuredRecord;
-import io.cdap.cdap.api.dataset.table.Table;
-import io.cdap.cdap.datapipeline.DataPipelineApp;
-import io.cdap.cdap.datapipeline.SmartWorkflow;
-import io.cdap.cdap.etl.api.batch.BatchSource;
-import io.cdap.cdap.etl.mock.batch.MockSink;
-import io.cdap.cdap.etl.mock.test.HydratorTestBase;
-import io.cdap.cdap.etl.proto.v2.ETLBatchConfig;
-import io.cdap.cdap.etl.proto.v2.ETLPlugin;
-import io.cdap.cdap.etl.proto.v2.ETLStage;
-import io.cdap.cdap.proto.ProgramRunStatus;
-import io.cdap.cdap.proto.artifact.AppRequest;
-import io.cdap.cdap.proto.id.ApplicationId;
-import io.cdap.cdap.proto.id.ArtifactId;
-import io.cdap.cdap.proto.id.NamespaceId;
-import io.cdap.cdap.test.ApplicationManager;
-import io.cdap.cdap.test.DataSetManager;
 import io.cdap.cdap.test.TestConfiguration;
-import io.cdap.cdap.test.WorkflowManager;
 import io.cdap.plugin.hubspot.common.SourceHubspotConfig;
-import io.cdap.plugin.hubspot.source.batch.HubspotBatchSource;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,35 +27,15 @@ import org.junit.rules.TestName;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-public class HubspotAPISourceETLTest extends HydratorTestBase {
+public abstract class HubspotAPISourceETLTest extends BaseHubspotETLTest {
   @ClassRule
   public static final TestConfiguration CONFIG = new TestConfiguration("explore.enabled", false);
   private static final ArtifactSummary APP_ARTIFACT = new ArtifactSummary("data-pipeline", "3.2.0");
   @Rule
   public TestName testName = new TestName();
 
-  private static String apiKey;
-
-  @BeforeClass
-  public static void setupTestClass() throws Exception {
-    apiKey = System.getProperty("hubspot.api.key");
-    if (apiKey == null || apiKey.isEmpty()) {
-      throw new IllegalArgumentException("hubspot.api.key system property must not be empty.");
-    }
-
-    ArtifactId parentArtifact = NamespaceId.DEFAULT.artifact(APP_ARTIFACT.getName(), APP_ARTIFACT.getVersion());
-
-    // add the artifact and mock plugins
-    setupBatchArtifacts(parentArtifact, DataPipelineApp.class);
-
-    // add our plugins artifact with the artifact as its parent.
-    // this will make our plugins available.
-    addPluginArtifact(NamespaceId.DEFAULT.artifact("example-plugins", "1.0.0"),
-                      parentArtifact,
-                      HubspotBatchSource.class);
-  }
+  protected static String apiKey;
 
   @Test
   public void testContactLists() throws Exception {
@@ -85,7 +46,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Contact Lists")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -97,7 +58,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Contacts")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -109,7 +70,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Email Events")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -121,7 +82,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Email Subscription")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -133,7 +94,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Recent Companies")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -145,7 +106,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Companies")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -157,7 +118,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Deals")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -169,7 +130,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Deal Pipelines")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -181,7 +142,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Marketing Email")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -193,7 +154,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Products")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -205,7 +166,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.OBJECT_TYPE, "Tickets")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -222,7 +183,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.END_DATE, "20191111")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -239,7 +200,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.END_DATE, "20191111")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -256,7 +217,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.END_DATE, "20191111")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -273,7 +234,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.END_DATE, "20191111")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -291,7 +252,7 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .put(SourceHubspotConfig.FILTERS, "client")
       .build();
 
-    List<StructuredRecord> records = getPipelineResults(properties);
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 
   @Test
@@ -310,33 +271,6 @@ public class HubspotAPISourceETLTest extends HydratorTestBase {
       .build();
 
 
-    List<StructuredRecord> records = getPipelineResults(properties);
-  }
-
-  public List<StructuredRecord> getPipelineResults(Map<String, String> sourceProperties) throws Exception {
-
-    ETLStage source = new ETLStage(HubspotBatchSource.NAME,
-                                   new ETLPlugin(HubspotBatchSource.NAME, BatchSource.PLUGIN_TYPE,
-                                                 sourceProperties, null));
-
-    String outputDatasetName = "output-batchsourcetest_" + testName.getMethodName();
-    ETLStage sink = new ETLStage("sink", MockSink.getPlugin(outputDatasetName));
-
-    ETLBatchConfig etlConfig = ETLBatchConfig.builder()
-      .addStage(source)
-      .addStage(sink)
-      .addConnection(source.getName(), sink.getName())
-      .build();
-
-    ApplicationId pipelineId = NamespaceId.DEFAULT.app("HubspotBatch_" + testName.getMethodName());
-    ApplicationManager appManager = deployApplication(pipelineId, new AppRequest<>(APP_ARTIFACT, etlConfig));
-
-    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
-    workflowManager.startAndWaitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
-
-    DataSetManager<Table> outputManager = getDataset(outputDatasetName);
-    List<StructuredRecord> outputRecords = MockSink.readOutput(outputManager);
-
-    return outputRecords;
+    List<StructuredRecord> records = getPipelineResults(properties, 1);
   }
 }
